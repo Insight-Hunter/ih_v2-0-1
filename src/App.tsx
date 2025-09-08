@@ -2,7 +2,6 @@ import React, { useContext } from 'react';
 import { CssBaseline, Container, Box, Typography, AppBar, Toolbar } from '@mui/material';
 import { AppProvider, AppContext } from './context/AppContext';
 import { UserProvider } from './context/UserContext';
-import { useUserSession } from './hooks/useUserSession';
 import { useMetrics } from './hooks/useMetrics';
 import { NavigationTabs } from './components/NavigationTabs';
 import { ErrorSnackbar } from './components/ErrorSnackbar';
@@ -20,7 +19,6 @@ const AppContent: React.FC = () => {
   const { state } = appContext;
   const { currentPage } = state;
 
-  useUserSession();
   useMetrics(currentPage);
 
   const renderPage = () => {
