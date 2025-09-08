@@ -1,5 +1,3 @@
-import type { User } from '@supabase/supabase-js';
-
 export interface Metrics {
   totalRevenue: number;
   monthlyGrowth: number;
@@ -22,6 +20,8 @@ export type Action =
   | { type: 'SET_ERROR'; payload: string | null };
 
 export interface UserContextType {
-  user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  user: { email: string } | null;
+  token: string | null;
+  setUser: React.Dispatch<React.SetStateAction<{ email: string } | null>>;
+  setToken: React.Dispatch<React.SetStateAction<string | null>>;
 }
