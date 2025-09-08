@@ -1,11 +1,5 @@
 import React, { createContext, useState, ReactNode, useEffect } from 'react';
-
-interface UserContextType {
-  user: { email: string } | null;
-  token: string | null;
-  setUser: React.Dispatch<React.SetStateAction<{ email: string } | null>>;
-  setToken: React.Dispatch<React.SetStateAction<string | null>>;
-}
+import { UserContextType } from '../types';
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -13,7 +7,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  // Restore token and user on reload
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
@@ -21,7 +14,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
-  // Persist token and user changes
   useEffect(() => {
     if (token) localStorage.setItem('token', token);
     else localStorage.removeItem('token');
@@ -38,4 +30,3 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     </UserContext.Provider>
   );
 };
-
