@@ -1,12 +1,6 @@
 import { useEffect, useContext } from 'react';
 import { AppContext } from '../context/AppContext';
-import { Metrics } from '../types';
-
-const mockMetrics: Metrics = {
-  totalRevenue: 123456,
-  monthlyGrowth: 15.7,
-  cashFlow: 76543,
-};
+import { apiFetch } from '../services/api';
 
 export const useMetrics = (currentPage: string) => {
   const appContext = useContext(AppContext);
@@ -15,14 +9,14 @@ export const useMetrics = (currentPage: string) => {
   const { dispatch } = appContext;
 
   useEffect(() => {
+    if (currentPage !== 'dashboard') return;
+
     const loadMetrics = async () => {
-      if (currentPage !== 'dashboard') return;
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
       try {
-        // Replace with real API call for metrics
-        await new Promise((r) => setTimeout(r, 1000));
-        dispatch({ type: 'SET_METRICS', payload: mockMetrics });
+        const metrics = await apiFetch('/api/metrics');
+        dispatch({ type: 'SET_METRICS', payload: metrics });
       } catch {
         dispatch({ type: 'SET_ERROR', payload: 'Failed to load metrics' });
       } finally {
@@ -33,3 +27,4 @@ export const useMetrics = (currentPage: string) => {
     loadMetrics();
   }, [currentPage, dispatch]);
 };
+
