@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, ReactNode, Dispatch } from 'react';
-import { AppState, Action, Page, Metrics } from '../types';
+import { AppState, Action } from '../types';
 
 const initialState: AppState = {
   currentPage: 'dashboard',
