@@ -1,13 +1,13 @@
-import { useState, useContext } from 'react';
+import { useContext, useState } from 'react';
 import { UserContext } from '../context/UserContext';
-
-const API_BASE = process.env.REACT_APP_API_BASE_URL ?? '';
+import { apiFetch } from '../services/api';
 
 export const useAuth = () => {
   const userContext = useContext(UserContext);
-  if (!userContext) throw new Error('useAuth must be inside UserProvider');
+  if (!userContext) throw new Error('useAuth must be used within UserProvider');
 
-  const { user, setUser } = userContext;
+  const { user, token, setUser, setToken } = userContext;
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,15 +15,14 @@ export const useAuth = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/signup`, {
+      await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/signup`, {
         method: 'POST',
         body: JSON.stringify({ email, password }),
         headers: { 'Content-Type': 'application/json' },
       });
-      if (!res.ok) throw new Error(await res.text());
-      setLoading(false);
     } catch (e: any) {
       setError(e.message || 'Signup failed');
+    } finally {
       setLoading(false);
     }
   };
@@ -32,7 +31,7 @@ export const useAuth = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         body: JSON.stringify({ email, password }),
         headers: { 'Content-Type': 'application/json' },
@@ -40,19 +39,19 @@ export const useAuth = () => {
       if (!res.ok) throw new Error(await res.text());
 
       const data = await res.json();
-      localStorage.setItem('token', data.token);
-      setUser({ email }); // minimal user object, call further API if needed
-      setLoading(false);
+      setToken(data.token);
+      setUser({ email });
     } catch (e: any) {
-      setError(e.message || 'Login failed');
+      setError(e.message ?? 'Login failed');
+    } finally {
       setLoading(false);
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    setToken(null);
     setUser(null);
   };
 
-  return { user, signup, login, logout, loading, error };
+  return { user, token, loading, error, signup, login, logout };
 };
