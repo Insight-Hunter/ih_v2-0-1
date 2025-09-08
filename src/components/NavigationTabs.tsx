@@ -29,3 +29,4 @@ export const NavigationTabs: React.FC = () => {
     </Tabs>
   );
 };
+
