@@ -3,6 +3,34 @@ import { Typography, Box, CircularProgress } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import { AppContext } from '../context/AppContext';
 import { SummaryCard } from './SummaryCard';
+import { useEffect, useContext } from 'react';
+import { Metrics } from '../types';
+import { apiFetch } from '../services/api';
+
+export const useMetrics = (currentPage: string) => {
+  const appContext = useContext(AppContext);
+  if (!appContext) throw new Error("useMetrics must be used within AppProvider");
+
+  const { dispatch } = appContext;
+
+  useEffect(() => {
+    const loadMetrics = async () => {
+      if (currentPage !== 'dashboard') return;
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+      try {
+        const metrics: Metrics = await apiFetch('/api/metrics');
+        dispatch({ type: 'SET_METRICS', payload: metrics });
+      } catch {
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load metrics' });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    };
+
+    loadMetrics();
+  }, [currentPage, dispatch]);
+};
 
 export const Dashboard: React.FC = () => {
   const appContext = useContext(AppContext);
