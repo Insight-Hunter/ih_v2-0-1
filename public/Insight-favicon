@@ -1,0 +1,37 @@
+<svg
+  width="64"
+  height="64"
+  viewBox="0 0 64 64"
+  xmlns="http://www.w3.org/2000/svg"
+  role="img"
+  aria-label="Insight Hunter logo with magnifying glass and upward arrow"
+>
+  <!-- Background Circle -->
+  <circle cx="32" cy="32" r="30" fill="#0077ff" />
+  
+  <!-- Magnifying glass handle -->
+  <rect x="43" y="42" width="8" height="16" transform="rotate(45 43 42)" fill="#ffffff" rx="2" ry="2"/>
+
+  <!-- Magnifying glass lens -->
+  <circle cx="26" cy="26" r="18" fill="#ffffff" opacity="0.15" stroke="#ffffff" stroke-width="3"/>
+
+  <!-- Trend line inside lens -->
+  <polyline
+    points="17,32 23,25 28,31 33,20 39,26"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="3"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  />
+
+  <!-- Arrowhead at end -->
+  <polyline
+    points="38,24 39,26 41,23"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="3"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  />
+</svg>
