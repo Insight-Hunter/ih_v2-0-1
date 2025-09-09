@@ -5,7 +5,8 @@ compatibility_flags = [ "nodejs_compat" ]
 workers_dev = true
 
 [vars]
-JWT_SECRET = "your-super-secret-string"
+JWT_SECRET = "7c3f84f0a88bce7bc76696afbb7c23cdd9aeb3afe74a015ed82d52f3bc3d26b4
+"
 
 [d1_databases]
 DB = { binding = "IH_DB", database_name = "insight_hunter_v2", database_id = "708836ad-602f-4f95-a6b5-cd31a7cd188d" }
