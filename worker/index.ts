@@ -2,7 +2,8 @@ import { D1Database } from '@cloudflare/workers-types';
 import { bcrypt } from '@cfworker/webcrypto';
 import jwt from '@tsndr/cloudflare-worker-jwt';
 
-const JWT_SECRET = 'replace-this-with-very-secure-secret';
+const JWT_SECRET = '7c3f84f0a88bce7bc76696afbb7c23cdd9aeb3afe74a015ed82d52f3bc3d26b4
+';
 
 declare const DB: D1Database;
 
