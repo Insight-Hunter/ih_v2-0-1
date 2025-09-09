@@ -4,20 +4,14 @@
   viewBox="0 0 64 64"
   xmlns="http://www.w3.org/2000/svg"
   role="img"
-  aria-label="Insight Hunter icon"
+  aria-label="Magnifying glass icon"
 >
-  <!-- Blue circular background -->
+  <!-- Background circle -->
   <circle cx="32" cy="32" r="30" fill="#0077ff" />
   
-  <!-- Magnifying glass outer circle -->
-  <circle cx="26" cy="26" r="16" fill="none" stroke="white" stroke-width="3" />
+  <!-- Magnifying glass lens -->
+  <circle cx="26" cy="26" r="18" fill="none" stroke="white" stroke-width="4" />
   
   <!-- Handle -->
-  <rect x="39" y="39" width="12" height="6" rx="3" ry="3" fill="white" transform="rotate(45 39 39)" />
-  
-  <!-- Arrow shaft -->
-  <line x1="21" y1="34" x2="31" y2="24" stroke="white" stroke-width="3" stroke-linecap="round" />
-  
-  <!-- Arrow upward -->
-  <polyline points="27,18 31,24 35,20" fill="none" stroke="white" stroke-width="3" stroke-linejoin="round" />
+  <rect x="41" y="41" width="12" height="6" rx="3" ry="3" fill="white" transform="rotate(45 41 41)" />
 </svg>
