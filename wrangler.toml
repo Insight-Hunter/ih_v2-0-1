@@ -1,0 +1,11 @@
+name = "insight-hunter-worker"
+main = "index.ts"                # or index.js if using JS
+compatibility_date = "2023-09-09"
+compatibility_flags = [ "nodejs_compat" ]
+workers_dev = true
+
+[vars]
+JWT_SECRET = "your-super-secret-string"
+
+[d1_databases]
+DB = { binding = "IH_DB", database_name = "insight_hunter_v2", database_id = "708836ad-602f-4f95-a6b5-cd31a7cd188d" }
