@@ -4,29 +4,20 @@
   viewBox="0 0 64 64"
   xmlns="http://www.w3.org/2000/svg"
   role="img"
-  aria-label="Insight Hunter logo - magnifying glass with upward growth arrow"
+  aria-label="Insight Hunter icon"
 >
-  <!-- Background Circle -->
+  <!-- Blue circular background -->
   <circle cx="32" cy="32" r="30" fill="#0077ff" />
   
-  <!-- Transparent magnifying glass lens -->
-  <circle cx="26" cy="26" r="18" fill="white" opacity="0.15" stroke="white" stroke-width="3"/>
+  <!-- Magnifying glass outer circle -->
+  <circle cx="26" cy="26" r="16" fill="none" stroke="white" stroke-width="3" />
   
-  <!-- Magnifying glass handle -->
-  <rect x="41" y="41" width="10" height="10" rx="2" ry="2" fill="white" transform="rotate(45 41 41)" />
+  <!-- Handle -->
+  <rect x="39" y="39" width="12" height="6" rx="3" ry="3" fill="white" transform="rotate(45 39 39)" />
   
-  <!-- Smooth growth arrow line -->
-  <path
-    d="M18 34
-       C22 28, 25 30, 29 25
-       C33 20, 36 23, 40 18"
-    fill="none"
-    stroke="white"
-    stroke-width="3"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <!-- Arrow shaft -->
+  <line x1="21" y1="34" x2="31" y2="24" stroke="white" stroke-width="3" stroke-linecap="round" />
   
-  <!-- Arrowhead -->
-  <polyline points="39 18 42 14 45 18" fill="none" stroke="white" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- Arrow upward -->
+  <polyline points="27,18 31,24 35,20" fill="none" stroke="white" stroke-width="3" stroke-linejoin="round" />
 </svg>
