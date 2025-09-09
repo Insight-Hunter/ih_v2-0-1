@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
 
+// Find or create a root element with id 'root'
 const rootElement = document.getElementById('root') ?? (() => {
   const el = document.createElement('div');
   el.id = 'root';
@@ -9,5 +10,6 @@ const rootElement = document.getElementById('root') ?? (() => {
   return el;
 })();
 
+// Create React root and render App
 const root = ReactDOM.createRoot(rootElement);
 root.render(<App />);
