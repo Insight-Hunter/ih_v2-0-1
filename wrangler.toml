@@ -1,4 +1,4 @@
-name = "insight-hunter-worker"
+name = "ih_v2-0-1"
 main = "worker/index.ts"             
 compatibility_date = "2025-09-09" 
 
