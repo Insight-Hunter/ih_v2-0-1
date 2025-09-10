@@ -1,24 +1,58 @@
-import { D1Database } from '@cloudflare/workers-types';
-import { bcrypt } from '@cfworker/webcrypto';
+/// <reference types="@cloudflare/workers-types" />
+
+import bcrypt from 'bcryptjs';
 import jwt from '@tsndr/cloudflare-worker-jwt';
 
-const JWT_SECRET = '7c3f84f0a88bce7bc76696afbb7c23cdd9aeb3afe74a015ed82d52f3bc3d26b4
-';
-
-declare const DB: D1Database;
+declare const IH_DB: D1Database;
 
 interface Env {
-  DB: D1Database;
+  IH_DB: D1Database;
+  JWT_SECRET: string;
 }
 
-async function hashPassword(password: string): Promise<string> {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const hashed = await bcrypt.hash(password);
-  return hashed; // bcrypt library output
+const parseJSON = async (req: Request): Promise<any | null> => {
+  try {
+    return await req.json();
+  } catch {
+    return null;
+  }
+};
+
+function createJsonResponse(data: any, status: number = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return await bcrypt.compare(password, hash);
+async function verifyToken(authHeader: string, env: Env): Promise<any | null> {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  const token = authHeader.slice(7);
+
+  const valid = await jwt.verify(token, env.JWT_SECRET);
+  if (!valid) return null;
+
+  const decoded = jwt.decode(token);
+  return decoded?.payload || null;
+}
+
+function validateEmail(email: unknown): boolean {
+  if (typeof email !== 'string') return false;
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+function validatePassword(password: unknown): boolean {
+  return typeof password === 'string' && password.length >= 6;
+}
+
+function validateTransaction(data: any): boolean {
+  if (!data) return false;
+  const { date, amount, type } = data;
+  if (typeof date !== 'string' || !date.trim()) return false;
+  if (typeof amount !== 'number') return false;
+  if (typeof type !== 'string' || !type.trim()) return false;
+  return true;
 }
 
 export default {
@@ -27,108 +61,114 @@ export default {
     const path = url.pathname;
     const method = request.method;
 
-    // Utility to parse JSON body safely
-    async function parseJSON(req: Request) {
-      try {
-        return await req.json();
-      } catch {
-        return null;
-      }
-    }
-
-    // Signup User
+    // ===== Signup =====
     if (path === '/api/auth/signup' && method === 'POST') {
       const data = await parseJSON(request);
-      if (!data?.email || !data?.password)
-        return new Response(JSON.stringify({ error: 'Missing email or password' }), { status: 400 });
+      if (!data || !validateEmail(data.email) || !validatePassword(data.password)) {
+        return createJsonResponse({ error: 'Invalid email or password' }, 400);
+      }
 
-      // Check email exists
-      const existing = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(data.email).first();
-      if (existing) return new Response(JSON.stringify({ error: 'Email already registered' }), { status: 409 });
+      const existing = await env.IH_DB.prepare('SELECT id FROM users WHERE email = ?')
+        .bind(data.email)
+        .first();
+      if (existing) return createJsonResponse({ error: 'Email already registered' }, 409);
 
-      // Hash password
-      const hashedPassword = await bcrypt.hash(data.password);
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      await env.IH_DB.prepare('INSERT INTO users (email, password) VALUES (?, ?)')
+        .bind(data.email, hashedPassword)
+        .run();
 
-      // Insert user
-      await env.DB.prepare('INSERT INTO users (email, password) VALUES (?, ?)').bind(data.email, hashedPassword).run();
-
-      return new Response(JSON.stringify({ message: 'User created' }), { status: 201 });
+      return createJsonResponse({ message: 'User created' }, 201);
     }
 
-    // Login User
+    // ===== Login =====
     if (path === '/api/auth/login' && method === 'POST') {
       const data = await parseJSON(request);
-      if (!data?.email || !data?.password)
-        return new Response(JSON.stringify({ error: 'Missing email or password' }), { status: 400 });
+      if (!data || !validateEmail(data.email) || !validatePassword(data.password)) {
+        return createJsonResponse({ error: 'Invalid email or password' }, 400);
+      }
 
-      const user: any = await env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(data.email).first();
-      if (!user) return new Response(JSON.stringify({ error: 'Invalid credentials' }), { status: 401 });
+      const user: any = await env.IH_DB.prepare('SELECT * FROM users WHERE email = ?')
+        .bind(data.email)
+        .first();
+      if (!user) return createJsonResponse({ error: 'Invalid credentials' }, 401);
 
-      // Verify password
       const validPassword = await bcrypt.compare(data.password, user.password);
-      if (!validPassword) return new Response(JSON.stringify({ error: 'Invalid credentials' }), { status: 401 });
+      if (!validPassword) return createJsonResponse({ error: 'Invalid credentials' }, 401);
 
-      // Generate JWT
-      const token = await jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+      const exp = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+      const token = await jwt.sign({ id: user.id, email: user.email, exp }, env.JWT_SECRET);
 
-      return new Response(JSON.stringify({ token }), { status: 200 });
+      return createJsonResponse({ token });
     }
 
-    // Authenticate from JWT token in Authorization header
+    // ===== Verify JWT for protected routes =====
     const authHeader = request.headers.get('Authorization') || '';
-    if (!authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-    }
-    const token = authHeader.substring(7);
-    let decoded: any;
-    try {
-      decoded = await jwt.verify(token, JWT_SECRET);
-    } catch {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 403 });
+    const decoded = await verifyToken(authHeader, env);
+    if (!decoded) {
+      return createJsonResponse({ error: 'Unauthorized' }, 401);
     }
 
-    // Protected routes below
-
-    // Fetch metrics for logged in user
+    // ===== Metrics (placeholder) =====
     if (path === '/api/metrics' && method === 'GET') {
-      // Placeholder metrics logic - add actual queries as needed
       const metrics = {
         totalRevenue: 100000,
         monthlyGrowth: 10.5,
         cashFlow: 50000,
       };
-      return new Response(JSON.stringify(metrics), { status: 200 });
+      return createJsonResponse(metrics);
     }
 
-    // Get transactions for logged user
+    // ===== Transactions: GET with pagination & filters =====
     if (path === '/api/transactions' && method === 'GET') {
-      const transactions = await env.DB
-        .prepare('SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC')
-        .bind(decoded.id)
-        .all();
+      const limit = Math.min(parseInt(url.searchParams.get('limit') || '50', 10), 100);
+      const offset = parseInt(url.searchParams.get('offset') || '0', 10);
+      const startDate = url.searchParams.get('startDate');
+      const endDate = url.searchParams.get('endDate');
 
-      return new Response(JSON.stringify({ transactions: transactions.results || [] }), { status: 200 });
+      let query = 'SELECT * FROM transactions WHERE user_id = ?';
+      const params: any[] = [decoded.id];
+
+      if (startDate) { query += ' AND date >= ?'; params.push(startDate); }
+      if (endDate) { query += ' AND date <= ?'; params.push(endDate); }
+
+      query += ' ORDER BY date DESC LIMIT ? OFFSET ?';
+      params.push(limit, offset);
+
+      const results = await env.IH_DB.prepare(query).bind(...params).all();
+
+      return createJsonResponse({
+        transactions: results.results || [],
+        pagination: {
+          limit,
+          offset,
+          count: results.results?.length || 0,
+        },
+      });
     }
 
-    // Add a transaction
+    // ===== Transactions: POST =====
     if (path === '/api/transactions' && method === 'POST') {
       const data = await parseJSON(request);
-      if (!data) return new Response(JSON.stringify({ error: 'Invalid input' }), { status: 400 });
+      if (!validateTransaction(data)) {
+        return createJsonResponse({ error: 'Invalid transaction data' }, 400);
+      }
 
-      const { date, description, category, amount, type } = data;
+      await env.IH_DB.prepare(
+        'INSERT INTO transactions (user_id, date, description, category, amount, type) VALUES (?, ?, ?, ?, ?, ?)'
+      ).bind(
+        decoded.id,
+        data.date,
+        data.description || null,
+        data.category || null,
+        data.amount,
+        data.type
+      ).run();
 
-      if (!date || !amount || !type) return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
-
-      await env.DB
-        .prepare(
-          'INSERT INTO transactions (user_id, date, description, category, amount, type) VALUES (?, ?, ?, ?, ?, ?)'
-        )
-        .bind(decoded.id, date, description, category, amount, type)
-        .run();
-
-      return new Response(JSON.stringify({ message: 'Transaction added' }), { status: 201 });
+      return createJsonResponse({ message: 'Transaction added' }, 201);
     }
 
-    return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
+    // ===== Not found =====
+    return createJsonResponse({ error: 'Not found' }, 404);
   },
 };

@@ -1,0 +1,22 @@
+{
+  "short_name": "InsightHunter",
+  "name": "Insight Hunter Auto-CFO Platform",
+  "icons": [
+    {
+      "src": "/favicon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/favicon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#0077ff",
+  "description": "AI-powered financial analytics and CFO platform for freelancers and small businesses."
+}

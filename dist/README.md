@@ -1,0 +1,1 @@
+This folder contains the built output assets for the worker "insight-hunter-worker" generated at 2025-09-10T04:16:48.360Z.
