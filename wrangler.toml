@@ -11,15 +11,12 @@ directory = "public/assets"
 command = "npm run build"
 cwd = "."
 upload_format = "modules"
-upload_dir = "./public"
+upload_dir = "."
 
-# Environment Variables
 [vars]
 JWT_SECRET = "env.JWT_SECRET"
 
-# D1 database binding
-
-[[d1_databases]
+[d1_databases]
 binding = "IH_DB"
 database_name = "insight_hunter_v2"
 database_id = "708836ad-602f-4f95-a6b5-cd31a7cd188d"
