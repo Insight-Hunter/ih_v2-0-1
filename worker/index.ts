@@ -1,6 +1,6 @@
 /// <reference types="@cloudflare/workers-types" />
 
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 import jwt from '@tsndr/cloudflare-worker-jwt';
 
 declare const IH_DB: D1Database;
