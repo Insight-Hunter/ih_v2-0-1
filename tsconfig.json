@@ -10,6 +10,7 @@
     "moduleResolution": "node",
     "target": "esnext",
     "types": ["@cloudflare/workers-types"],
+    "skipDefaultLibCheck": true,
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],

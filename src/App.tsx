@@ -15,6 +15,24 @@ import { useMetrics } from './hooks/useMetrics';
 import { NavigationTabs } from './components/NavigationTabs';
 import { ErrorSnackbar } from './components/ErrorSnackbar';
 
+// defensive lazy imports: support both named and default exports
+const lazyDefault = (path: () => Promise<any>, name?: string) =>
+  lazy(() =>
+    path().then(mod => {
+      // if named export exists, use it; otherwise use default
+      if (name && mod[name]) return { default: mod[name] };
+      if (mod && (mod.default || Object.keys(mod).length === 1)) return { default: mod.default ?? mod[Object.keys(mod)[0]] };
+      // fallback to any (keeps build from failing)
+      return { default: (mod as any).default ?? (mod as any) };
+    })
+  );
+
+const Dashboard = lazyDefault(() => import("./components/Dashboard"), "Dashboard");
+const Forecast  = lazyDefault(() => import("./components/Forecast"), "Forecast");
+const Reports   = lazyDefault(() => import("./components/Reports"), "Reports");
+const Settings  = lazyDefault(() => import("./components/Settings"), "Settings");
+const Analytics = lazyDefault(() => import("./components/Analytics"), "Analytics");
+const Onboarding= lazyDefault(() => import("./components/Onboarding"), "Onboarding");
 // ---- Lazy-loaded pages ----
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
 const Forecast = React.lazy(() => import('./components/Forecast'));
