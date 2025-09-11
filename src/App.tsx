@@ -1,143 +1,134 @@
-import React, { useContext, Suspense } from 'react';
-import {
-  CssBaseline,
-  Container,
-  Box,
-  Typography,
-  AppBar,
-  Toolbar,
-  CircularProgress
-} from '@mui/material';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { AppProvider, AppContext } from './context/AppContext';
-import { UserProvider } from './context/UserContext';
-import { useMetrics } from './hooks/useMetrics';
-import { NavigationTabs } from './components/NavigationTabs';
-import { ErrorSnackbar } from './components/ErrorSnackbar';
+// src/App.tsx
+import React, { useState, lazy, Suspense } from "react";
+import type { SyntheticEvent } from "react";
 
-// defensive lazy imports: support both named and default exports
-const lazyDefault = (path: () => Promise<any>, name?: string) =>
+import CssBaseline from "@mui/material/CssBaseline";
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import Container from "@mui/material/Container";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+
+import { AppProvider } from "./context/AppContext";
+import { UserProvider } from "./context/UserContext";
+import NavigationTabs from "./components/NavigationTabs";
+import ErrorSnackbar from "./components/ErrorSnackbar";
+
+// Defensive lazy helper (works with named or default exports)
+const lazyDefault = (loader: () => Promise<any>, named?: string) =>
   lazy(() =>
-    path().then(mod => {
-      // if named export exists, use it; otherwise use default
-      if (name && mod[name]) return { default: mod[name] };
-      if (mod && (mod.default || Object.keys(mod).length === 1)) return { default: mod.default ?? mod[Object.keys(mod)[0]] };
-      // fallback to any (keeps build from failing)
-      return { default: (mod as any).default ?? (mod as any) };
+    loader().then(mod => {
+      try {
+        if (named && mod && Object.prototype.hasOwnProperty.call(mod, named)) {
+          return { default: mod[named] };
+        }
+        if (mod && mod.default) {
+          return { default: mod.default };
+        }
+        const keys = mod ? Object.keys(mod).filter(k => k !== "__esModule") : [];
+        if (keys.length === 1) {
+          return { default: mod[keys[0]] };
+        }
+        return { default: (mod as any) };
+      } catch (err) {
+        return { default: (mod as any) };
+      }
     })
   );
 
+// Lazy components
 const Dashboard = lazyDefault(() => import("./components/Dashboard"), "Dashboard");
 const Forecast  = lazyDefault(() => import("./components/Forecast"), "Forecast");
 const Reports   = lazyDefault(() => import("./components/Reports"), "Reports");
 const Settings  = lazyDefault(() => import("./components/Settings"), "Settings");
 const Analytics = lazyDefault(() => import("./components/Analytics"), "Analytics");
 const Onboarding= lazyDefault(() => import("./components/Onboarding"), "Onboarding");
-// ---- Lazy-loaded pages ----
-const Dashboard = React.lazy(() => import('./components/Dashboard'));
-const Forecast = React.lazy(() => import('./components/Forecast'));
-const Reports = React.lazy(() => import('./components/Reports'));
-const Settings = React.lazy(() => import('./components/Settings'));
-const Analytics = React.lazy(() => import('./components/Analytics'));
-const Onboarding = React.lazy(() => import('./components/Onboarding'));
 
-// ---- Page type ----
 type Page =
-  | 'dashboard'
-  | 'forecast'
-  | 'reports'
-  | 'settings'
-  | 'analytics'
-  | 'onboarding';
+  | "dashboard"
+  | "forecast"
+  | "reports"
+  | "settings"
+  | "analytics"
+  | "onboarding";
 
-// ---- App Content ----
-const AppContent: React.FC = () => {
-  const appContext = useContext(AppContext);
-  if (!appContext) return null;
-
-  const { state } = appContext;
-  const { currentPage } = state;
-
-  useMetrics(currentPage);
-
-  const pages: Record<Page, JSX.Element> = {
-    dashboard: <Dashboard />,
-    forecast: <Forecast />,
-    reports: <Reports />,
-    settings: <Settings />,
-    analytics: <Analytics />,
-    onboarding: <Onboarding />,
-  };
-
-  return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      minHeight="100vh"
-    >
-      <CssBaseline />
-
-      {/* Header */}
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Insight Hunter – Auto-CFO Platform
-          </Typography>
-          <NavigationTabs />
-        </Toolbar>
-      </AppBar>
-
-      {/* Main Content */}
-      <Container
-        maxWidth="lg"
-        sx={{ flexGrow: 1, mt: 4, mb: 4 }}
-      >
-        <ErrorSnackbar />
-        <Suspense fallback={<CircularProgress />}>
-          {pages[currentPage as Page] ?? (
-            <Typography>Page Not Found</Typography>
-          )}
-        </Suspense>
-      </Container>
-
-      {/* Footer */}
-      <Box
-        component="footer"
-        sx={{
-          py: 3,
-          px: 2,
-          mt: 'auto',
-          backgroundColor: '#f4f6f8',
-          textAlign: 'center'
-        }}
-      >
-        <Typography variant="body2" color="text.secondary">
-          &copy; {new Date().getFullYear()} Insight Hunter. Empowering small business finance.
-        </Typography>
-      </Box>
-    </Box>
-  );
+const pageToComponent: Record<Page, React.LazyExoticComponent<React.ComponentType<any>>> = {
+  dashboard: Dashboard,
+  forecast: Forecast,
+  reports: Reports,
+  settings: Settings,
+  analytics: Analytics,
+  onboarding: Onboarding,
 };
 
-// ---- Theme ----
-const theme = createTheme({
-  palette: {
-    primary: { main: '#1a73e8' }, // Google Blue style
-    secondary: { main: '#ff9800' }, // Orange accent
-    background: { default: '#fafafa' }
-  },
-  typography: {
-    fontFamily: 'Inter, Roboto, Arial, sans-serif',
-  },
-});
+export default function App(): JSX.Element {
+  const [page, setPage] = useState<Page>("dashboard");
 
-// ---- Root App ----
-export const App: React.FC = () => (
-  <ThemeProvider theme={theme}>
-    <UserProvider>
-      <AppProvider>
-        <AppContent />
-      </AppProvider>
-    </UserProvider>
-  </ThemeProvider>
-);
+  // NavigationTabs likely uses the (event, value) signature similar to MUI Tabs.
+  // We accept either string or number and coerce to our Page set.
+  const handleNavChange = (_event: SyntheticEvent, value: unknown) => {
+    if (typeof value === "string") {
+      if (isPage(value)) setPage(value);
+    } else if (typeof value === "number") {
+      // optional numeric mapping fallback — keep predictable: map index to pages
+      const map: Page[] = ["dashboard", "forecast", "reports", "analytics", "settings", "onboarding"];
+      const idx = Math.max(0, Math.min(map.length - 1, value));
+      setPage(map[idx]);
+    }
+  };
+
+  const ActiveComponent = pageToComponent[page];
+
+  return (
+    <AppProvider>
+      <UserProvider>
+        <CssBaseline />
+        <AppBar position="static" elevation={1}>
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              Insight Hunter
+            </Typography>
+            {/* You can put top-right actions (profile, logout) here if desired */}
+          </Toolbar>
+        </AppBar>
+
+        <Box component="nav" sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Container maxWidth="lg">
+            {/* NavigationTabs is assumed to accept `value` + `onChange` (MUI-like) */}
+            <NavigationTabs value={page} onChange={handleNavChange} />
+          </Container>
+        </Box>
+
+        <Container maxWidth="lg" sx={{ mt: 3, mb: 6 }}>
+          <Suspense
+            fallback={
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
+                <CircularProgress />
+              </Box>
+            }
+          >
+            <Box sx={{ minHeight: "60vh" }}>
+              <ActiveComponent />
+            </Box>
+          </Suspense>
+        </Container>
+
+        <ErrorSnackbar />
+      </UserProvider>
+    </AppProvider>
+  );
+}
+
+/* ---------- helpers ---------- */
+
+function isPage(v: string): v is Page {
+  return (
+    v === "dashboard" ||
+    v === "forecast" ||
+    v === "reports" ||
+    v === "settings" ||
+    v === "analytics" ||
+    v === "onboarding"
+  );
+}
