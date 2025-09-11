@@ -6,13 +6,20 @@
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-
+    {
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    
     // Environment Settings
     "module": "esnext",
     "moduleResolution": "node",
     "target": "esnext",
-    "types": ["@cloudflare/workers-types"],
+    "types": ["@cloudflare/workers-types", "bcryptjs"],
     "skipDefaultLibCheck": true,
+    
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -43,5 +50,9 @@
     "skipLibCheck": true
   }, 
 
-  "include": ["scr", "worker"]
+  "include": [
+    "scr", 
+    "worker", 
+    "src/types/**/*.d.ts"
+  ]
 }
